@@ -1,12 +1,10 @@
 {
   "build": {
-    "preview": {
-      "developmentClient": false,
-      "distribution": "internal"
-    },
     "production": {
-      "developmentClient": false,
       "distribution": "store"
+    },
+    "preview": {
+      "distribution": "internal"
     }
   }
 }

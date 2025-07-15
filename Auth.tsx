@@ -143,22 +143,19 @@ const AuthScreen = () => {
                 const access_token = params.get('access_token');
                 const refresh_token = params.get('refresh_token');
 
-                console.log('Refresh token', refresh_token);
 
+                console.log(access_token)
+                console.log(refresh_token)
                 if (access_token) {
-                    const {data: sessionData, error: sessionError} = await supabase.auth.setSession({
-                        access_token,
-                        refresh_token: refresh_token || '',
+                    console.log("here")
+                    const { error: sessionError } = await supabase.auth._getSessionFromURL({
+                        url: result.url,
                     });
-                    console.log(sessionData);
-
-                    if (sessionError) {
-                        Alert.alert('Error', sessionError.message);
-                    } else if (sessionData?.session) {
-                        Alert.alert('Success', 'Logged in with Discord!');
-                        navigation.navigate('Home');
+                    if (error) {
+                        Alert.alert('Error', error);
                     } else {
-                        Alert.alert('Error', 'Failed to create session');
+                        Alert.alert('Success', 'Logged in with Discord!');
+                        navigation.navigate('ProfileSetup');
                     }
                 } else {
                     Alert.alert('Error', 'No access token received');
