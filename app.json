@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "expo-fashion-app",
+    "name": "Fashion App",
     "slug": "expo-fashion-app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -12,6 +12,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "scheme": "com.fashionapp",
     "ios": {
       "supportsTablet": true
     },

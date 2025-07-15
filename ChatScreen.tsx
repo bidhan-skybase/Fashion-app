@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
     View, Text, TextInput, Button, FlatList, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform,
 } from 'react-native';
-import { supabase } from './utils/supabase';
-import { useNavigation } from '@react-navigation/native';
-import { Session } from '@supabase/supabase-js';
-import { GoogleGenAI } from '@google/genai';
+import {supabase} from './utils/supabase';
+import {useNavigation} from '@react-navigation/native';
+import {Session} from '@supabase/supabase-js';
+import {GoogleGenAI} from '@google/genai';
 
 // --- Types
 interface ChatMessage {
@@ -42,8 +42,8 @@ const ChatScreen = () => {
 
     // Fetch session
     useEffect(() => {
-        supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        supabase.auth.getSession().then(({data: {session}}) => setSession(session));
+        const {data: {subscription}} = supabase.auth.onAuthStateChange((_event, session) => {
             setSession(session);
         });
         return () => subscription.unsubscribe();
@@ -53,7 +53,7 @@ const ChatScreen = () => {
     useEffect(() => {
         const fetchProfile = async () => {
             if (session?.user.id) {
-                const { data, error } = await supabase
+                const {data, error} = await supabase
                     .from('profiles')
                     .select('style, bio, bottom_size, top_size, gender, skin_tone, body_shape, height')
                     .eq('id', session.user.id)
@@ -91,7 +91,7 @@ const ChatScreen = () => {
     const handleSend = async () => {
         if (!inputText.trim()) return;
 
-        const userMessage: ChatMessage = { id: Date.now(), text: inputText, isUser: true };
+        const userMessage: ChatMessage = {id: Date.now(), text: inputText, isUser: true};
         setMessages((prev) => [...prev, userMessage]);
 
         // Handle guided setup
@@ -99,7 +99,7 @@ const ChatScreen = () => {
             let nextStep: typeof guidedStep | null = null;
 
             if (guidedStep === 'ask-body') {
-                await supabase.from('profiles').update({ body_shape: inputText }).eq('id', session?.user.id);
+                await supabase.from('profiles').update({body_shape: inputText}).eq('id', session?.user.id);
                 nextStep = 'ask-height';
                 setMessages(prev => [...prev, {
                     id: Date.now() + 2,
@@ -107,7 +107,7 @@ const ChatScreen = () => {
                     isUser: false,
                 }]);
             } else if (guidedStep === 'ask-height') {
-                await supabase.from('profiles').update({ height: inputText }).eq('id', session?.user.id);
+                await supabase.from('profiles').update({height: inputText}).eq('id', session?.user.id);
                 nextStep = 'ask-skin';
                 setMessages(prev => [...prev, {
                     id: Date.now() + 3,
@@ -115,7 +115,7 @@ const ChatScreen = () => {
                     isUser: false,
                 }]);
             } else if (guidedStep === 'ask-skin') {
-                await supabase.from('profiles').update({ skin_tone: inputText }).eq('id', session?.user.id);
+                await supabase.from('profiles').update({skin_tone: inputText}).eq('id', session?.user.id);
                 setMessages(prev => [...prev, {
                     id: Date.now() + 4,
                     text: "Awesome! You're all set. Ask me anything about outfits now 👗👕",
@@ -134,24 +134,23 @@ const ChatScreen = () => {
             fashionProfile?.style &&
             fashionProfile?.top_size &&
             fashionProfile?.bottom_size &&
-            fashionProfile?.gender &&
-            fashionProfile?.skin_tone
+            fashionProfile?.gender
         ) {
             const prompt = `
       The user's style is ${fashionProfile.style}, sizes are ${fashionProfile.top_size} (top) and ${fashionProfile.bottom_size} (bottom).
-      Gender: ${fashionProfile.gender}, Skin tone: ${fashionProfile.skin_tone}.
+      Gender: ${fashionProfile.gender}, Skin tone: ${fashionProfile.skin_tone}. Bio: ${fashionProfile.bio}
       User said: "${inputText}". Suggest a short outfit idea.
       `;
 
             try {
-                const ai = new GoogleGenAI({ apiKey: 'AIzaSyAPioEgdNBjVVS8br54PaGW4k1qLPmBtUk' });
+                const ai = new GoogleGenAI({apiKey: 'AIzaSyAPioEgdNBjVVS8br54PaGW4k1qLPmBtUk'});
                 const result = await ai.models.generateContent({
                     model: 'gemini-2.5-flash',
                     contents: prompt,
                 });
                 const recommendation = result.text;
                 if (session?.user?.id) {
-                    const { error } = await supabase.from('recommendations').insert({
+                    const {error} = await supabase.from('recommendations').insert({
                         user_id: session.user.id,
                         recommendation_text: recommendation,
                     });
@@ -205,7 +204,7 @@ const ChatScreen = () => {
                     keyExtractor={(item) => item}
                     horizontal
                     contentContainerStyle={styles.suggestionList}
-                    renderItem={({ item }) => (
+                    renderItem={({item}) => (
                         <TouchableOpacity
                             onPress={() => setInputText(item)}
                             style={styles.suggestionChip}
@@ -219,7 +218,7 @@ const ChatScreen = () => {
             {/* Chat Messages */}
             <FlatList
                 data={messages}
-                renderItem={({ item }) => (
+                renderItem={({item}) => (
                     <View style={item.isUser ? styles.userMessage : styles.aiMessage}>
                         <Text style={styles.messageText}>{item.text}</Text>
                     </View>
@@ -236,7 +235,7 @@ const ChatScreen = () => {
                     onChangeText={setInputText}
                     placeholder="Ask your fashion question..."
                 />
-                <Button title="Send" onPress={handleSend} />
+                <Button title="Send" onPress={handleSend}/>
             </View>
         </KeyboardAvoidingView>
     );
@@ -281,7 +280,7 @@ const styles = StyleSheet.create({
     inputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom:24
+        marginBottom: 24
     },
     input: {
         flex: 1,
@@ -292,7 +291,7 @@ const styles = StyleSheet.create({
         marginRight: 8,
     },
     suggestionList: {
-        height:40,
+        height: 40,
         marginBottom: 12,
         flexDirection: 'row',
         gap: 8,
