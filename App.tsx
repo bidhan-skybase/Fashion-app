@@ -6,7 +6,9 @@ import { supabase } from './utils/supabase';
 
 import AuthScreen from './Auth';
 import ProfileSetupPage from './ProfileSetup';
-import HomeScreen from './Home'; // Assume you have one
+import HomeScreen from './Home';
+import structuredClone from '@ungap/structured-clone';
+if (!global.structuredClone) global.structuredClone = structuredClone;
 
 const Stack = createNativeStackNavigator();
 
@@ -23,7 +25,6 @@ const App = () => {
             if (userData) {
                 await checkProfile(userData.id);
             }
-
             setLoading(false);
         });
 
@@ -47,7 +48,7 @@ const App = () => {
 
     const checkProfile = async (userId: string) => {
         const { data, error } = await supabase
-            .from('users')
+            .from('profiles')
             .select('profile_completed')
             .eq('id', userId)
             .single();

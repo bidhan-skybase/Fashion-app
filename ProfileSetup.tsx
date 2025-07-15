@@ -18,6 +18,7 @@ interface ProfileData {
     topSize: string;
     bottomSize: string;
     bio: string;
+    profile_completed: boolean;
 }
 
 interface User {
@@ -35,6 +36,7 @@ const ProfileScreen: React.FC = () => {
         topSize: '',
         bottomSize: '',
         bio: '',
+        profile_completed: false,
     });
 
     // Skin tone options
@@ -92,6 +94,7 @@ const ProfileScreen: React.FC = () => {
                     topSize: data.top_size || '',
                     bottomSize: data.bottom_size || '',
                     bio: data.bio || '',
+                    profile_completed:true
                 });
             }
         } catch (error) {
@@ -124,7 +127,9 @@ const ProfileScreen: React.FC = () => {
                     top_size: profile.topSize,
                     bottom_size: profile.bottomSize,
                     bio: profile.bio,
+                    profile_completed: profile.profile_completed,
                     updated_at: new Date().toISOString(),
+
                 });
 
             if (error) {
