@@ -21,10 +21,23 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.bidhanmarasine.expofashionapp"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "215f4cec-02e9-4b1d-8d0e-4d2d730d6921"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/215f4cec-02e9-4b1d-8d0e-4d2d730d6921"
+    },
+    "owner": "bidhan-marasine"
   }
 }

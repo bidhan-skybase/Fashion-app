@@ -40,7 +40,6 @@ const ChatScreen = () => {
     const [session, setSession] = useState<Session | null>(null);
     const navigation = useNavigation();
 
-    // Fetch session
     useEffect(() => {
         supabase.auth.getSession().then(({data: {session}}) => setSession(session));
         const {data: {subscription}} = supabase.auth.onAuthStateChange((_event, session) => {

@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { View, TextInput, Button, Alert, StyleSheet, Text, ActivityIndicator } from 'react-native';
-import { supabase } from './utils/supabase';
-import { useNavigation } from "@react-navigation/native";
+import React, {useState, useEffect} from 'react';
+import {View, TextInput, Button, Alert, StyleSheet, Text, ActivityIndicator} from 'react-native';
+import {supabase} from './utils/supabase';
+import {useNavigation} from "@react-navigation/native";
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
 
@@ -25,7 +25,7 @@ const AuthScreen = () => {
 
                 if (access_token) {
                     try {
-                        const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+                        const {data: sessionData, error: sessionError} = await supabase.auth.setSession({
                             access_token,
                             refresh_token: refresh_token || '',
                         });
@@ -43,7 +43,7 @@ const AuthScreen = () => {
             }
         };
 
-        const linkingSubscription = Linking.addEventListener('url', ({ url }) => {
+        const linkingSubscription = Linking.addEventListener('url', ({url}) => {
             handleDeepLink(url);
         });
 
@@ -82,7 +82,7 @@ const AuthScreen = () => {
     const handleSignIn = async () => {
         setLoading(true);
         try {
-            const { data, error } = await supabase.auth.signInWithPassword({
+            const {data, error} = await supabase.auth.signInWithPassword({
                 email,
                 password,
             });
@@ -105,16 +105,16 @@ const AuthScreen = () => {
     const handleDiscordSignIn = async () => {
         setOauthLoading(true);
         try {
-            const redirectUrl = Linking.createURL('auth');
-
-            const { data, error } = await supabase.auth.signInWithOAuth({
+            const redirectUrl = "com.fashionapp://auth"
+            console.log("Redirect URL", redirectUrl);
+            console.log(redirectUrl);
+            const {data, error} = await supabase.auth.signInWithOAuth({
                 provider: 'discord',
                 options: {
                     redirectTo: redirectUrl,
                     skipBrowserRedirect: true,
                 },
             });
-
             if (error) {
                 Alert.alert('Error', error.message);
                 return;
@@ -143,11 +143,14 @@ const AuthScreen = () => {
                 const access_token = params.get('access_token');
                 const refresh_token = params.get('refresh_token');
 
+                console.log('Refresh token', refresh_token);
+
                 if (access_token) {
-                    const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+                    const {data: sessionData, error: sessionError} = await supabase.auth.setSession({
                         access_token,
                         refresh_token: refresh_token || '',
                     });
+                    console.log(sessionData);
 
                     if (sessionError) {
                         Alert.alert('Error', sessionError.message);
@@ -195,7 +198,7 @@ const AuthScreen = () => {
                 disabled={loading || oauthLoading}
                 color="#4CAF50"
             />
-            <View style={styles.buttonSpacer} />
+            <View style={styles.buttonSpacer}/>
             <Button
                 title={loading ? "Loading..." : "Sign In"}
                 onPress={handleSignIn}
@@ -214,7 +217,7 @@ const AuthScreen = () => {
                 color="#7289DA"
             />
             {oauthLoading && (
-                <ActivityIndicator size="small" color="#0000ff" style={styles.activityIndicator} />
+                <ActivityIndicator size="small" color="#0000ff" style={styles.activityIndicator}/>
             )}
         </View>
     );
