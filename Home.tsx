@@ -1,8 +1,8 @@
 import {Button, ScrollView, Text, View, TouchableOpacity, StyleSheet} from 'react-native';
 import {supabase} from './utils/supabase';
-import {useEffect, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Session} from '@supabase/supabase-js';
-import {useNavigation} from '@react-navigation/native';
+import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import RecommendationCard from "./components/RecommendationCard";
 import Recommendation from "./models/RecommendationModel";
 
@@ -12,49 +12,53 @@ const Home = () => {
     const [session, setUser] = useState<Session | null>(null);
     const [loading, setLoading] = useState(true);
     const navigation = useNavigation();
+    const [refreshTrigger, setRefreshTrigger] = useState(false);
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                setLoading(true);
-                const {data: {session}, error: sessionError} = await supabase.auth.getSession();
-                if (sessionError) {
-                    console.error('Failed to fetch session:', sessionError.message);
-                    setUser(null);
-                    setRecommendations([]);
-                    navigation.navigate('Auth');
-                    return;
-                }
 
-                setUser(session);
-
-                if (session?.user.id) {
-                    const {data, error} = await supabase
-                        .from('recommendations')
-                        .select('*')
-                        .eq('user_id', session.user.id);
-
-                    if (error) {
-                        console.error('Failed to fetch recommendations:', error.message);
+    useFocusEffect(
+        React.useCallback(() => {
+            const fetchData = async () => {
+                try {
+                    setLoading(true);
+                    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                    if (sessionError) {
+                        console.error('Failed to fetch session:', sessionError.message);
+                        setUser(null);
                         setRecommendations([]);
-                    } else {
-                        setRecommendations(data || []);
+                        navigation.navigate('Auth');
+                        return;
                     }
-                } else {
+
+                    setUser(session);
+
+                    if (session?.user.id) {
+                        const { data, error } = await supabase
+                            .from('recommendations')
+                            .select('*')
+                            .eq('user_id', session.user.id);
+
+                        if (error) {
+                            console.error('Failed to fetch recommendations:', error.message);
+                            setRecommendations([]);
+                        } else {
+                            setRecommendations(data || []);
+                        }
+                    } else {
+                        setRecommendations([]);
+                        navigation.navigate('Auth');
+                    }
+                } catch (err) {
+                    console.error('Unexpected error:', err.message);
                     setRecommendations([]);
                     navigation.navigate('Auth');
+                } finally {
+                    setLoading(false);
                 }
-            } catch (err) {
-                console.error('Unexpected error:', err.message);
-                setRecommendations([]);
-                navigation.navigate('Auth');
-            } finally {
-                setLoading(false);
-            }
-        };
+            };
 
-        fetchData();
-    }, [navigation]);
+            fetchData();
+        }, [navigation, refreshTrigger])
+    );
 
     useEffect(() => {
         const {data: authListener} = supabase.auth.onAuthStateChange((_event, newSession) => {
@@ -112,9 +116,12 @@ const Home = () => {
                     <Text style={styles.noData}>Not logged in.</Text>
                 )}
 
-                <Button title={"Chat with us"} onPress={()=>{
-                    navigation.navigate("Chat")
-                }}></Button>
+                <TouchableOpacity
+                    style={styles.chatButton}
+                    onPress={() => navigation.navigate('Chat')}
+                >
+                    <Text style={styles.chatButtonText}>💬 Chat with us</Text>
+                </TouchableOpacity>
             </View>
         </ScrollView>
     );
@@ -161,6 +168,23 @@ const styles = StyleSheet.create({
         color: '#666',
         textAlign: 'center',
         marginVertical: 20,
+    },
+    chatButton: {
+        backgroundColor: '#007AFF',       // Nice blue color
+        paddingVertical: 14,
+        paddingHorizontal: 24,
+        borderRadius: 30,
+        alignItems: 'center',
+        marginTop: 16,
+        shadowColor: '#000',
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 3,                      // For Android shadow
+    },
+    chatButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
     },
 });
 

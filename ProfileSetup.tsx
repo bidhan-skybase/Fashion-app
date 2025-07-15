@@ -23,7 +23,7 @@ interface ProfileData {
     bottomSize: string;
     bio: string;
     profile_completed: boolean;
-    style:string
+    style: string
 }
 
 interface User {
@@ -42,20 +42,20 @@ const ProfileScreen: React.FC = () => {
             topSize: '',
             bottomSize: '',
             bio: '',
-            profile_completed: false,
+            profile_completed: true,
             style: '',
         });
 
-        // Skin tone options
-        const skinToneOptions = [
-            'Fair',
-            'Light',
-            'Medium',
-            'Olive',
-            'Tan',
-            'Dark',
-            'Deep',
-        ];
+        // // Skin tone options
+        // const skinToneOptions = [
+        //     'Fair',
+        //     'Light',
+        //     'Medium',
+        //     'Olive',
+        //     'Tan',
+        //     'Dark',
+        //     'Deep',
+        // ];
 
         // Skin tone options
         const styleOptions = [
@@ -109,7 +109,7 @@ const ProfileScreen: React.FC = () => {
                         bottomSize: data.bottom_size || '',
                         bio: data.bio || '',
                         profile_completed: true,
-                        style:data.style || '',
+                        style: data.style || '',
                     });
                 }
             } catch (error) {
@@ -124,7 +124,7 @@ const ProfileScreen: React.FC = () => {
                 return;
             }
 
-            if (!profile.fullName || !profile.gender || !profile.skinTone) {
+            if (!profile.fullName || !profile.gender ) {
                 Alert.alert('Error', 'Please fill in all required fields');
                 return;
             }
@@ -144,7 +144,7 @@ const ProfileScreen: React.FC = () => {
                         bio: profile.bio,
                         profile_completed: profile.profile_completed,
                         updated_at: new Date().toISOString(),
-                        style:profile.style
+                        style: profile.style
 
                     });
 
@@ -153,7 +153,11 @@ const ProfileScreen: React.FC = () => {
                 }
 
                 Alert.alert('Success', 'Profile saved successfully!');
-                await generateRecommendation();
+                navigation.reset({
+                    index: 0,
+                    routes: [{name: 'Home'}],
+                });
+                // await generateRecommendation();
             } catch (error: any) {
                 console.error('Error saving profile:', error);
                 Alert.alert('Error', error.message || 'Failed to save profile');
@@ -162,71 +166,70 @@ const ProfileScreen: React.FC = () => {
             }
         };
 
-        // Generate AI recommendation
-        const generateRecommendation = async () => {
-            if (!user) return;
-
-            const recommendationText = `
-You are a fashion stylist AI assistant.
-
-The user profile is:
-- Gender: ${profile.gender}
-- Skin Tone: ${profile.skinTone}
-- Top Size: ${profile.topSize}
-- Bottom Size: ${profile.bottomSize}
-- Style: ${profile.style}
-${profile.bio ? `- Bio: ${profile.bio}` : ''}
-
-Suggest 1–2 outfit styles ideal for this profile. Recommend:
-1. Outfit ideas (top, bottom, layer, shoes)
-2. Ideal color palette based on skin tone
-3. Fit advice for body proportions
-
-Keep it short, friendly, and practical for everyday or travel.
-`;
-
-            try {
-                const ai = new GoogleGenAI({
-                    apiKey: "AIzaSyAPioEgdNBjVVS8br54PaGW4k1qLPmBtUk"
-                });
-
-
-                const response = await ai.models.generateContent({
-                    model: "gemini-2.5-flash",
-                    contents: recommendationText,
-                });
-                const recommendation = response.text;
-
-
-
-                // Save recommendation to database
-                const {error} = await supabase
-                    .from('recommendations')
-                    .insert({
-                        user_id: user.id,
-                        recommendation_text: recommendation,
-                    });
-
-                if (error) {
-                    console.error('Error saving recommendation:', error);
-                    // Don't block navigation if recommendation save fails
-                }
-
-                // Navigate to Home after everything is complete
-                navigation.reset({
-                    index: 0,
-                    routes: [{ name: 'Home' }],
-                });
-
-            } catch (error) {
-                console.error('Error generating recommendation:', error);
-                // Still navigate to Home even if recommendation fails
-                navigation.reset({
-                    index: 0,
-                    routes: [{ name: 'Home' }],
-                });
-            }
-        };
+//         // Generate AI recommendation
+//         const generateRecommendation = async () => {
+//             if (!user) return;
+//
+//             const recommendationText = `
+// You are a fashion stylist AI assistant.
+//
+// The user profile is:
+// - Gender: ${profile.gender}
+// - Skin Tone: ${profile.skinTone}
+// - Top Size: ${profile.topSize}
+// - Bottom Size: ${profile.bottomSize}
+// - Style: ${profile.style}
+// ${profile.bio ? `- Bio: ${profile.bio}` : ''}
+//
+// Suggest 1–2 outfit styles ideal for this profile. Recommend:
+// 1. Outfit ideas (top, bottom, layer, shoes)
+// 2. Ideal color palette based on skin tone
+// 3. Fit advice for body proportions
+//
+// Keep it short, friendly, and practical for everyday or travel.
+// `;
+//
+//             try {
+//                 const ai = new GoogleGenAI({
+//                     apiKey: "AIzaSyAPioEgdNBjVVS8br54PaGW4k1qLPmBtUk"
+//                 });
+//
+//
+//                 const response = await ai.models.generateContent({
+//                     model: "gemini-2.5-flash",
+//                     contents: recommendationText,
+//                 });
+//                 const recommendation = response.text;
+//
+//
+//                 // Save recommendation to database
+//                 const {error} = await supabase
+//                     .from('recommendations')
+//                     .insert({
+//                         user_id: user.id,
+//                         recommendation_text: recommendation,
+//                     });
+//
+//                 if (error) {
+//                     console.error('Error saving recommendation:', error);
+//                     // Don't block navigation if recommendation save fails
+//                 }
+//
+//                 // Navigate to Home after everything is complete
+//                 navigation.reset({
+//                     index: 0,
+//                     routes: [{name: 'Home'}],
+//                 });
+//
+//             } catch (error) {
+//                 console.error('Error generating recommendation:', error);
+//                 // Still navigate to Home even if recommendation fails
+//                 navigation.reset({
+//                     index: 0,
+//                     routes: [{name: 'Home'}],
+//                 });
+//             }
+//         };
 // Sign out function
         const handleSignOut = async () => {
             await supabase.auth.signOut();
@@ -300,28 +303,28 @@ Keep it short, friendly, and practical for everyday or travel.
                     </View>
 
                     {/* Skin Tone Selection */}
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Skin Tone *</Text>
-                        <View style={styles.optionsGrid}>
-                            {skinToneOptions.map((tone) => (
-                                <TouchableOpacity
-                                    key={tone}
-                                    style={[
-                                        styles.optionButton,
-                                        profile.skinTone === tone && styles.optionButtonSelected
-                                    ]}
-                                    onPress={() => setProfile(prev => ({...prev, skinTone: tone}))}
-                                >
-                                    <Text style={[
-                                        styles.optionText,
-                                        profile.skinTone === tone && styles.optionTextSelected
-                                    ]}>
-                                        {tone}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
-                    </View>
+                    {/*<View style={styles.inputGroup}>*/}
+                    {/*    <Text style={styles.label}>Skin Tone *</Text>*/}
+                    {/*    <View style={styles.optionsGrid}>*/}
+                    {/*        {skinToneOptions.map((tone) => (*/}
+                    {/*            <TouchableOpacity*/}
+                    {/*                key={tone}*/}
+                    {/*                style={[*/}
+                    {/*                    styles.optionButton,*/}
+                    {/*                    profile.skinTone === tone && styles.optionButtonSelected*/}
+                    {/*                ]}*/}
+                    {/*                onPress={() => setProfile(prev => ({...prev, skinTone: tone}))}*/}
+                    {/*            >*/}
+                    {/*                <Text style={[*/}
+                    {/*                    styles.optionText,*/}
+                    {/*                    profile.skinTone === tone && styles.optionTextSelected*/}
+                    {/*                ]}>*/}
+                    {/*                    {tone}*/}
+                    {/*                </Text>*/}
+                    {/*            </TouchableOpacity>*/}
+                    {/*        ))}*/}
+                    {/*    </View>*/}
+                    {/*</View>*/}
 
                     {/*Style selection */}
                     <View style={styles.inputGroup}>
