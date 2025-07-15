@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
     View,
     Text,
@@ -9,7 +9,11 @@ import {
     ScrollView,
     ActivityIndicator,
 } from 'react-native';
-import { supabase } from './utils/supabase';
+import {supabase} from './utils/supabase';
+import {GoogleGenAI} from "@google/genai";
+import {useNavigation} from "@react-navigation/native";
+import Home from "./Home";
+
 
 interface ProfileData {
     fullName: string;
@@ -27,324 +31,368 @@ interface User {
 }
 
 const ProfileScreen: React.FC = () => {
-    const [user, setUser] = useState<User | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [profile, setProfile] = useState<ProfileData>({
-        fullName: '',
-        gender: '',
-        skinTone: '',
-        topSize: '',
-        bottomSize: '',
-        bio: '',
-        profile_completed: false,
-    });
+        const navigation = useNavigation();
+        const [user, setUser] = useState<User | null>(null);
+        const [loading, setLoading] = useState(false);
+        const [profile, setProfile] = useState<ProfileData>({
+            fullName: '',
+            gender: '',
+            skinTone: '',
+            topSize: '',
+            bottomSize: '',
+            bio: '',
+            profile_completed: false,
+        });
 
-    // Skin tone options
-    const skinToneOptions = [
-        'Fair',
-        'Light',
-        'Medium',
-        'Olive',
-        'Tan',
-        'Dark',
-        'Deep',
-    ];
+        // Skin tone options
+        const skinToneOptions = [
+            'Fair',
+            'Light',
+            'Medium',
+            'Olive',
+            'Tan',
+            'Dark',
+            'Deep',
+        ];
 
-    // Size options based on gender
-    const getSizeOptions = (gender: string) => {
-        if (gender === 'male') {
-            return ['L', 'XL', 'XXL'];
-        } else if (gender === 'female') {
-            return ['S', 'M'];
-        }
-        return [];
-    };
+        // Size options based on gender
+        const getSizeOptions = (gender: string) => {
+            if (gender === 'male') {
+                return ['L', 'XL', 'XXL'];
+            } else if (gender === 'female') {
+                return ['S', 'M'];
+            }
+            return [];
+        };
 
-    // Get current user
-    useEffect(() => {
-        const getCurrentUser = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session?.user) {
-                setUser({ id: session.user.id, email: session.user.email || '' });
-                loadProfile(session.user.id);
+        // Get current user
+        useEffect(() => {
+            const getCurrentUser = async () => {
+                const {data: {session}} = await supabase.auth.getSession();
+                if (session?.user) {
+                    setUser({id: session.user.id, email: session.user.email || ''});
+                    loadProfile(session.user.id);
+                }
+            };
+            getCurrentUser();
+        }, []);
+
+        // Load existing profile
+        const loadProfile = async (userId: string) => {
+            try {
+                const {data, error} = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', userId)
+                    .single();
+
+                if (error && error.code !== 'PGRST116') {
+                    console.error('Error loading profile:', error);
+                    return;
+                }
+
+                if (data) {
+                    setProfile({
+                        fullName: data.full_name || '',
+                        gender: data.gender || '',
+                        skinTone: data.skin_tone || '',
+                        topSize: data.top_size || '',
+                        bottomSize: data.bottom_size || '',
+                        bio: data.bio || '',
+                        profile_completed: true
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading profile:', error);
             }
         };
-        getCurrentUser();
-    }, []);
 
-    // Load existing profile
-    const loadProfile = async (userId: string) => {
-        try {
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', userId)
-                .single();
-
-            if (error && error.code !== 'PGRST116') {
-                console.error('Error loading profile:', error);
+        // Save profile to database
+        const saveProfile = async () => {
+            if (!user) {
+                Alert.alert('Error', 'User not found');
                 return;
             }
 
-            if (data) {
-                setProfile({
-                    fullName: data.full_name || '',
-                    gender: data.gender || '',
-                    skinTone: data.skin_tone || '',
-                    topSize: data.top_size || '',
-                    bottomSize: data.bottom_size || '',
-                    bio: data.bio || '',
-                    profile_completed:true
-                });
-            }
-        } catch (error) {
-            console.error('Error loading profile:', error);
-        }
-    };
-
-    // Save profile to database
-    const saveProfile = async () => {
-        if (!user) {
-            Alert.alert('Error', 'User not found');
-            return;
-        }
-
-        if (!profile.fullName || !profile.gender || !profile.skinTone) {
-            Alert.alert('Error', 'Please fill in all required fields');
-            return;
-        }
-
-        setLoading(true);
-        try {
-            const { error } = await supabase
-                .from('profiles')
-                .upsert({
-                    id: user.id,
-                    email: user.email,
-                    full_name: profile.fullName,
-                    gender: profile.gender,
-                    skin_tone: profile.skinTone,
-                    top_size: profile.topSize,
-                    bottom_size: profile.bottomSize,
-                    bio: profile.bio,
-                    profile_completed: profile.profile_completed,
-                    updated_at: new Date().toISOString(),
-
-                });
-
-            if (error) {
-                throw error;
+            if (!profile.fullName || !profile.gender || !profile.skinTone) {
+                Alert.alert('Error', 'Please fill in all required fields');
+                return;
             }
 
-            Alert.alert('Success', 'Profile saved successfully!');
-            generateRecommendation();
-        } catch (error: any) {
-            console.error('Error saving profile:', error);
-            Alert.alert('Error', error.message || 'Failed to save profile');
-        } finally {
-            setLoading(false);
-        }
-    };
+            setLoading(true);
+            try {
+                const {error} = await supabase
+                    .from('profiles')
+                    .upsert({
+                        id: user.id,
+                        email: user.email,
+                        full_name: profile.fullName,
+                        gender: profile.gender,
+                        skin_tone: profile.skinTone,
+                        top_size: profile.topSize,
+                        bottom_size: profile.bottomSize,
+                        bio: profile.bio,
+                        profile_completed: profile.profile_completed,
+                        updated_at: new Date().toISOString(),
 
-    // Generate AI recommendation
-    const generateRecommendation = async () => {
-        if (!user) return;
+                    });
 
-        try {
-            const recommendationText = `Based on your profile - ${profile.gender} with ${profile.skinTone} skin tone, size ${profile.topSize}/${profile.bottomSize}. For your style, consider colors that complement your skin tone and cuts that flatter your body type.`;
+                if (error) {
+                    throw error;
+                }
 
-            const { error } = await supabase
-                .from('recommendations')
-                .insert({
-                    user_id: user.id,
-                    recommendation_text: recommendationText,
+                Alert.alert('Success', 'Profile saved successfully!');
+                await generateRecommendation();
+            } catch (error: any) {
+                console.error('Error saving profile:', error);
+                Alert.alert('Error', error.message || 'Failed to save profile');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        // Generate AI recommendation
+        const generateRecommendation = async () => {
+            if (!user) return;
+
+            const recommendationText = `
+You are a fashion stylist AI assistant.
+
+The user profile is:
+- Gender: ${profile.gender}
+- Skin Tone: ${profile.skinTone}
+- Top Size: ${profile.topSize}
+- Bottom Size: ${profile.bottomSize}
+${profile.bio ? `- Bio: ${profile.bio}` : ''}
+
+Suggest 1–2 outfit styles ideal for this profile. Recommend:
+1. Outfit ideas (top, bottom, layer, shoes)
+2. Ideal color palette based on skin tone
+3. Fit advice for body proportions
+
+Keep it short, friendly, and practical for everyday or travel.
+`;
+
+            try {
+                const ai = new GoogleGenAI({
+                    apiKey: "AIzaSyAPioEgdNBjVVS8br54PaGW4k1qLPmBtUk"
                 });
 
-            if (error) {
-                console.error('Error saving recommendation:', error);
+
+                const response = await ai.models.generateContent({
+                    model: "gemini-2.5-flash",
+                    contents: recommendationText,
+                });
+                const recommendation = response.text;
+
+
+
+                // Save recommendation to database
+                const {error} = await supabase
+                    .from('recommendations')
+                    .insert({
+                        user_id: user.id,
+                        recommendation_text: recommendation,
+                    });
+
+                if (error) {
+                    console.error('Error saving recommendation:', error);
+                    // Don't block navigation if recommendation save fails
+                }
+
+                // Navigate to Home after everything is complete
+                navigation.reset({
+                    index: 0,
+                    routes: [{ name: 'Home' }],
+                });
+
+            } catch (error) {
+                console.error('Error generating recommendation:', error);
+                // Still navigate to Home even if recommendation fails
+                navigation.reset({
+                    index: 0,
+                    routes: [{ name: 'Home' }],
+                });
             }
-        } catch (error) {
-            console.error('Error generating recommendation:', error);
-        }
-    };
+        };
+// Sign out function
+        const handleSignOut = async () => {
+            await supabase.auth.signOut();
+        };
 
-    // Sign out function
-    const handleSignOut = async () => {
-        await supabase.auth.signOut();
-    };
+// Reset sizes when gender changes
+        const handleGenderChange = (gender: 'male' | 'female') => {
+            setProfile(prev => ({
+                ...prev,
+                gender,
+                topSize: '',
+                bottomSize: '',
+            }));
+        };
 
-    // Reset sizes when gender changes
-    const handleGenderChange = (gender: 'male' | 'female') => {
-        setProfile(prev => ({
-            ...prev,
-            gender,
-            topSize: '',
-            bottomSize: '',
-        }));
-    };
-
-    return (
-        <ScrollView style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.title}>Profile Setup</Text>
-                <TouchableOpacity onPress={handleSignOut} style={styles.signOutButton}>
-                    <Text style={styles.signOutText}>Sign Out</Text>
-                </TouchableOpacity>
-            </View>
-
-            <View style={styles.form}>
-                {/* Full Name */}
-                <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Full Name *</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Enter your full name"
-                        value={profile.fullName}
-                        onChangeText={(text) => setProfile(prev => ({ ...prev, fullName: text }))}
-                    />
+        return (
+            <ScrollView style={styles.container}>
+                <View style={styles.header}>
+                    <Text style={styles.title}>Profile Setup</Text>
+                    <TouchableOpacity onPress={handleSignOut} style={styles.signOutButton}>
+                        <Text style={styles.signOutText}>Sign Out</Text>
+                    </TouchableOpacity>
                 </View>
 
-                {/* Gender Selection */}
-                <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Gender *</Text>
-                    <View style={styles.radioGroup}>
-                        <TouchableOpacity
-                            style={[
-                                styles.radioButton,
-                                profile.gender === 'male' && styles.radioButtonSelected
-                            ]}
-                            onPress={() => handleGenderChange('male')}
-                        >
-                            <Text style={[
-                                styles.radioText,
-                                profile.gender === 'male' && styles.radioTextSelected
-                            ]}>
-                                Male
-                            </Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[
-                                styles.radioButton,
-                                profile.gender === 'female' && styles.radioButtonSelected
-                            ]}
-                            onPress={() => handleGenderChange('female')}
-                        >
-                            <Text style={[
-                                styles.radioText,
-                                profile.gender === 'female' && styles.radioTextSelected
-                            ]}>
-                                Female
-                            </Text>
-                        </TouchableOpacity>
+                <View style={styles.form}>
+                    {/* Full Name */}
+                    <View style={styles.inputGroup}>
+                        <Text style={styles.label}>Full Name *</Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Enter your full name"
+                            value={profile.fullName}
+                            onChangeText={(text) => setProfile(prev => ({...prev, fullName: text}))}
+                        />
                     </View>
-                </View>
 
-                {/* Skin Tone Selection */}
-                <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Skin Tone *</Text>
-                    <View style={styles.optionsGrid}>
-                        {skinToneOptions.map((tone) => (
+                    {/* Gender Selection */}
+                    <View style={styles.inputGroup}>
+                        <Text style={styles.label}>Gender *</Text>
+                        <View style={styles.radioGroup}>
                             <TouchableOpacity
-                                key={tone}
                                 style={[
-                                    styles.optionButton,
-                                    profile.skinTone === tone && styles.optionButtonSelected
+                                    styles.radioButton,
+                                    profile.gender === 'male' && styles.radioButtonSelected
                                 ]}
-                                onPress={() => setProfile(prev => ({ ...prev, skinTone: tone }))}
+                                onPress={() => handleGenderChange('male')}
                             >
                                 <Text style={[
-                                    styles.optionText,
-                                    profile.skinTone === tone && styles.optionTextSelected
+                                    styles.radioText,
+                                    profile.gender === 'male' && styles.radioTextSelected
                                 ]}>
-                                    {tone}
+                                    Male
                                 </Text>
                             </TouchableOpacity>
-                        ))}
+                            <TouchableOpacity
+                                style={[
+                                    styles.radioButton,
+                                    profile.gender === 'female' && styles.radioButtonSelected
+                                ]}
+                                onPress={() => handleGenderChange('female')}
+                            >
+                                <Text style={[
+                                    styles.radioText,
+                                    profile.gender === 'female' && styles.radioTextSelected
+                                ]}>
+                                    Female
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
-                </View>
 
-                {/* Size Selection - Only show if gender is selected */}
-                {profile.gender && (
-                    <>
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Top Size</Text>
-                            <View style={styles.sizeGroup}>
-                                {getSizeOptions(profile.gender).map((size) => (
-                                    <TouchableOpacity
-                                        key={`top-${size}`}
-                                        style={[
-                                            styles.sizeButton,
-                                            profile.topSize === size && styles.sizeButtonSelected
-                                        ]}
-                                        onPress={() => setProfile(prev => ({ ...prev, topSize: size }))}
-                                    >
-                                        <Text style={[
-                                            styles.sizeText,
-                                            profile.topSize === size && styles.sizeTextSelected
-                                        ]}>
-                                            {size}
-                                        </Text>
-                                    </TouchableOpacity>
-                                ))}
-                            </View>
+                    {/* Skin Tone Selection */}
+                    <View style={styles.inputGroup}>
+                        <Text style={styles.label}>Skin Tone *</Text>
+                        <View style={styles.optionsGrid}>
+                            {skinToneOptions.map((tone) => (
+                                <TouchableOpacity
+                                    key={tone}
+                                    style={[
+                                        styles.optionButton,
+                                        profile.skinTone === tone && styles.optionButtonSelected
+                                    ]}
+                                    onPress={() => setProfile(prev => ({...prev, skinTone: tone}))}
+                                >
+                                    <Text style={[
+                                        styles.optionText,
+                                        profile.skinTone === tone && styles.optionTextSelected
+                                    ]}>
+                                        {tone}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
                         </View>
+                    </View>
 
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Bottom Size</Text>
-                            <View style={styles.sizeGroup}>
-                                {getSizeOptions(profile.gender).map((size) => (
-                                    <TouchableOpacity
-                                        key={`bottom-${size}`}
-                                        style={[
-                                            styles.sizeButton,
-                                            profile.bottomSize === size && styles.sizeButtonSelected
-                                        ]}
-                                        onPress={() => setProfile(prev => ({ ...prev, bottomSize: size }))}
-                                    >
-                                        <Text style={[
-                                            styles.sizeText,
-                                            profile.bottomSize === size && styles.sizeTextSelected
-                                        ]}>
-                                            {size}
-                                        </Text>
-                                    </TouchableOpacity>
-                                ))}
+                    {/* Size Selection - Only show if gender is selected */}
+                    {profile.gender && (
+                        <>
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.label}>Top Size</Text>
+                                <View style={styles.sizeGroup}>
+                                    {getSizeOptions(profile.gender).map((size) => (
+                                        <TouchableOpacity
+                                            key={`top-${size}`}
+                                            style={[
+                                                styles.sizeButton,
+                                                profile.topSize === size && styles.sizeButtonSelected
+                                            ]}
+                                            onPress={() => setProfile(prev => ({...prev, topSize: size}))}
+                                        >
+                                            <Text style={[
+                                                styles.sizeText,
+                                                profile.topSize === size && styles.sizeTextSelected
+                                            ]}>
+                                                {size}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
                             </View>
-                        </View>
-                    </>
-                )}
 
-                {/* Bio */}
-                <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Bio (Optional)</Text>
-                    <Text style={styles.sublabel}>Tell us about your work habits, age, lifestyle, etc.</Text>
-                    <TextInput
-                        style={[styles.input, styles.textArea]}
-                        placeholder="e.g., I'm a 25-year-old office worker who prefers comfortable, professional clothing..."
-                        value={profile.bio}
-                        onChangeText={(text) => setProfile(prev => ({ ...prev, bio: text }))}
-                        multiline
-                        numberOfLines={4}
-                        textAlignVertical="top"
-                    />
-                </View>
-
-                {/* Save Button */}
-                <TouchableOpacity
-                    style={[styles.saveButton, loading && styles.saveButtonDisabled]}
-                    onPress={saveProfile}
-                    disabled={loading}
-                >
-                    {loading ? (
-                        <ActivityIndicator color="#fff" />
-                    ) : (
-                        <Text style={styles.saveButtonText}>Save Profile & Get Recommendations</Text>
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.label}>Bottom Size</Text>
+                                <View style={styles.sizeGroup}>
+                                    {getSizeOptions(profile.gender).map((size) => (
+                                        <TouchableOpacity
+                                            key={`bottom-${size}`}
+                                            style={[
+                                                styles.sizeButton,
+                                                profile.bottomSize === size && styles.sizeButtonSelected
+                                            ]}
+                                            onPress={() => setProfile(prev => ({...prev, bottomSize: size}))}
+                                        >
+                                            <Text style={[
+                                                styles.sizeText,
+                                                profile.bottomSize === size && styles.sizeTextSelected
+                                            ]}>
+                                                {size}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            </View>
+                        </>
                     )}
-                </TouchableOpacity>
-            </View>
-        </ScrollView>
-    );
-};
+
+                    {/* Bio */}
+                    <View style={styles.inputGroup}>
+                        <Text style={styles.label}>Bio (Optional)</Text>
+                        <Text style={styles.sublabel}>Tell us about your work habits, age, lifestyle, etc.</Text>
+                        <TextInput
+                            style={[styles.input, styles.textArea]}
+                            placeholder="e.g., I'm a 25-year-old office worker who prefers comfortable, professional clothing..."
+                            value={profile.bio}
+                            onChangeText={(text) => setProfile(prev => ({...prev, bio: text}))}
+                            multiline
+                            numberOfLines={4}
+                            textAlignVertical="top"
+                        />
+                    </View>
+
+                    {/* Save Button */}
+                    <TouchableOpacity
+                        style={[styles.saveButton, loading && styles.saveButtonDisabled]}
+                        onPress={saveProfile}
+                        disabled={loading}
+                    >
+                        {loading ? (
+                            <ActivityIndicator color="#fff"/>
+                        ) : (
+                            <Text style={styles.saveButtonText}>Save Profile & Get Recommendations</Text>
+                        )}
+                    </TouchableOpacity>
+                </View>
+            </ScrollView>
+        );
+    }
+;
 
 const styles = StyleSheet.create({
     container: {

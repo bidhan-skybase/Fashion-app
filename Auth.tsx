@@ -22,6 +22,7 @@ const AuthScreen = () => {
                 Alert.alert('Error', error.message);
             } else {
                 Alert.alert('Success', 'Account created! Check your email for verification.');
+                navigation.navigate('ProfileSetup')
             }
         } catch (error) {
             Alert.alert('Error');
