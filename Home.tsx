@@ -1,8 +1,8 @@
-import { Button, ScrollView, Text, View, TouchableOpacity, StyleSheet } from 'react-native';
-import { supabase } from './utils/supabase';
-import { useEffect, useState } from 'react';
-import { Session } from '@supabase/supabase-js';
-import { useNavigation } from '@react-navigation/native';
+import {Button, ScrollView, Text, View, TouchableOpacity, StyleSheet} from 'react-native';
+import {supabase} from './utils/supabase';
+import {useEffect, useState} from 'react';
+import {Session} from '@supabase/supabase-js';
+import {useNavigation} from '@react-navigation/native';
 import RecommendationCard from "./components/RecommendationCard";
 import Recommendation from "./models/RecommendationModel";
 
@@ -17,7 +17,7 @@ const Home = () => {
         const fetchData = async () => {
             try {
                 setLoading(true);
-                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                const {data: {session}, error: sessionError} = await supabase.auth.getSession();
                 if (sessionError) {
                     console.error('Failed to fetch session:', sessionError.message);
                     setUser(null);
@@ -29,7 +29,7 @@ const Home = () => {
                 setUser(session);
 
                 if (session?.user.id) {
-                    const { data, error } = await supabase
+                    const {data, error} = await supabase
                         .from('recommendations')
                         .select('*')
                         .eq('user_id', session.user.id);
@@ -57,7 +57,7 @@ const Home = () => {
     }, [navigation]);
 
     useEffect(() => {
-        const { data: authListener } = supabase.auth.onAuthStateChange((_event, newSession) => {
+        const {data: authListener} = supabase.auth.onAuthStateChange((_event, newSession) => {
             setUser(newSession);
             if (!newSession) {
                 navigation.navigate('Auth');
@@ -71,7 +71,7 @@ const Home = () => {
 
     const handleSignOut = async () => {
         try {
-            const { error } = await supabase.auth.signOut();
+            const {error} = await supabase.auth.signOut();
             if (error) {
                 console.error('Sign-out failed:', error.message);
             } else {
@@ -96,22 +96,25 @@ const Home = () => {
     return (
         <ScrollView style={styles.container}>
             <View>
-                <Text style={styles.header}>Home</Text>
                 {session ? (
                     <>
                         <Text style={styles.welcome}>Welcome, {session.user.email}</Text>
                         {recommendations.length > 0 ? (
                             recommendations.map((rec) => (
-                                <RecommendationCard key={rec.id} recommendation={rec} />
+                                <RecommendationCard key={rec.id} recommendation={rec}/>
                             ))
                         ) : (
                             <Text style={styles.noData}>No recommendations found.</Text>
                         )}
-                        <Button title="Sign out" onPress={handleSignOut} />
+
                     </>
                 ) : (
                     <Text style={styles.noData}>Not logged in.</Text>
                 )}
+
+                <Button title={"Chat with us"} onPress={()=>{
+                    navigation.navigate("Chat")
+                }}></Button>
             </View>
         </ScrollView>
     );
@@ -138,7 +141,7 @@ const styles = StyleSheet.create({
         padding: 16,
         marginBottom: 12,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
+        shadowOffset: {width: 0, height: 2},
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,

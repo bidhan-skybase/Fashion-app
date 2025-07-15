@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Text, View, ActivityIndicator } from 'react-native';
+import {Text, View, ActivityIndicator, TouchableOpacity} from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { supabase } from './utils/supabase';
@@ -10,6 +10,7 @@ import HomeScreen from './Home';
 import structuredClone from '@ungap/structured-clone';
 import RecommendationScreen from "./Recommendation";
 import Home from "./Home";
+import ChatScreen from "./ChatScreen";
 if (!global.structuredClone) global.structuredClone = structuredClone;
 
 const Stack = createNativeStackNavigator();
@@ -80,7 +81,25 @@ const App = () => {
             >
                 <Stack.Screen name="Auth" component={AuthScreen} />
                 <Stack.Screen name="ProfileSetup" component={ProfileSetupPage} />
-                <Stack.Screen name="Home" component={Home} />
+                <Stack.Screen name="Chat" component={ChatScreen} />
+                <Stack.Screen
+                    name="Home"
+                    component={Home}
+                    options={{
+                        title: 'Home',
+                        headerRight: () => (
+                            <TouchableOpacity
+                                onPress={() => {
+                                    console.log('Action pressed');
+                                     supabase.auth.signOut();
+                                }}
+                                style={{ marginRight: 0 }}
+                            >
+                                <Text style={{color:"#007AFF"}}>Sign Out</Text>
+                            </TouchableOpacity>
+                        ),
+                    }}
+                />
                 <Stack.Screen name="Recommendation" component={RecommendationScreen} />
             </Stack.Navigator>
         </NavigationContainer>

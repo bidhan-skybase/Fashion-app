@@ -23,6 +23,7 @@ interface ProfileData {
     bottomSize: string;
     bio: string;
     profile_completed: boolean;
+    style:string
 }
 
 interface User {
@@ -42,6 +43,7 @@ const ProfileScreen: React.FC = () => {
             bottomSize: '',
             bio: '',
             profile_completed: false,
+            style: '',
         });
 
         // Skin tone options
@@ -53,6 +55,13 @@ const ProfileScreen: React.FC = () => {
             'Tan',
             'Dark',
             'Deep',
+        ];
+
+        // Skin tone options
+        const styleOptions = [
+            "Minimal",
+            "Casual",
+            "Vintage"
         ];
 
         // Size options based on gender
@@ -87,7 +96,7 @@ const ProfileScreen: React.FC = () => {
                     .single();
 
                 if (error && error.code !== 'PGRST116') {
-                    console.error('Error loading profile:', error);
+                    // console.error('Error loading profile:', error);
                     return;
                 }
 
@@ -99,7 +108,8 @@ const ProfileScreen: React.FC = () => {
                         topSize: data.top_size || '',
                         bottomSize: data.bottom_size || '',
                         bio: data.bio || '',
-                        profile_completed: true
+                        profile_completed: true,
+                        style:data.style || '',
                     });
                 }
             } catch (error) {
@@ -134,6 +144,7 @@ const ProfileScreen: React.FC = () => {
                         bio: profile.bio,
                         profile_completed: profile.profile_completed,
                         updated_at: new Date().toISOString(),
+                        style:profile.style
 
                     });
 
@@ -163,6 +174,7 @@ The user profile is:
 - Skin Tone: ${profile.skinTone}
 - Top Size: ${profile.topSize}
 - Bottom Size: ${profile.bottomSize}
+- Style: ${profile.style}
 ${profile.bio ? `- Bio: ${profile.bio}` : ''}
 
 Suggest 1–2 outfit styles ideal for this profile. Recommend:
@@ -218,6 +230,7 @@ Keep it short, friendly, and practical for everyday or travel.
 // Sign out function
         const handleSignOut = async () => {
             await supabase.auth.signOut();
+            navigation.navigate("Auth")
         };
 
 // Reset sizes when gender changes
@@ -309,6 +322,31 @@ Keep it short, friendly, and practical for everyday or travel.
                             ))}
                         </View>
                     </View>
+
+                    {/*Style selection */}
+                    <View style={styles.inputGroup}>
+                        <Text style={styles.label}>Style </Text>
+                        <View style={styles.optionsGrid}>
+                            {styleOptions.map((style) => (
+                                <TouchableOpacity
+                                    key={style}
+                                    style={[
+                                        styles.optionButton,
+                                        profile.style === style && styles.optionButtonSelected
+                                    ]}
+                                    onPress={() => setProfile(prev => ({...prev, style: style}))}
+                                >
+                                    <Text style={[
+                                        styles.optionText,
+                                        profile.style === style && styles.optionTextSelected
+                                    ]}>
+                                        {style}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    </View>
+
 
                     {/* Size Selection - Only show if gender is selected */}
                     {profile.gender && (

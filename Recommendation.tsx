@@ -98,10 +98,7 @@ const RecommendationScreen = () => {
                     </Text>
                 )}
             </View>
-            <Button
-                title="Go Back"
-                onPress={() => navigation.goBack()}
-            />
+
         </View>
             </ScrollView>
     );
