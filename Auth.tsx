@@ -44,6 +44,7 @@ const AuthScreen = () => {
                 Alert.alert('Error', error.message);
             } else if (data?.session) {
                 console.log("Logged in:", data);
+                navigation.navigate('Home')
                 Alert.alert('Success', 'Logged in successfully!');
             } else {
                 Alert.alert('Error', 'Unexpected error occurred.');

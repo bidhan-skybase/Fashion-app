@@ -9,6 +9,7 @@ import ProfileSetupPage from './ProfileSetup';
 import HomeScreen from './Home';
 import structuredClone from '@ungap/structured-clone';
 import RecommendationScreen from "./Recommendation";
+import Home from "./Home";
 if (!global.structuredClone) global.structuredClone = structuredClone;
 
 const Stack = createNativeStackNavigator();
@@ -73,10 +74,14 @@ const App = () => {
 
     return (
         <NavigationContainer>
-            <Stack.Navigator screenOptions={{ headerShown: true }}>
+            <Stack.Navigator
+                initialRouteName={user ? (profileCompleted ? 'Home' : 'ProfileSetup') : 'Auth'}
+                screenOptions={{ headerShown: true }}
+            >
                 <Stack.Screen name="Auth" component={AuthScreen} />
                 <Stack.Screen name="ProfileSetup" component={ProfileSetupPage} />
-                <Stack.Screen name="Home" component={HomeScreen} />
+                <Stack.Screen name="Home" component={Home} />
+                <Stack.Screen name="Recommendation" component={RecommendationScreen} />
             </Stack.Navigator>
         </NavigationContainer>
     );
