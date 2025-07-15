@@ -37,7 +37,7 @@ const AuthScreen = () => {
                             navigation.navigate('Home');
                         }
                     } catch (error) {
-                        console.error('Deep link auth error:', error);
+                        // console.error('Deep link auth error:', error);
                     }
                 }
             }
@@ -61,23 +61,24 @@ const AuthScreen = () => {
     const handleSignUp = async () => {
         setLoading(true);
         try {
-            const { data, error } = await supabase.auth.signUp({
+            const {data, error} = await supabase.auth.signUp({
                 email,
                 password,
             });
+            console.log(data);
 
             if (error) {
                 Alert.alert('Error', error.message);
             } else {
                 Alert.alert('Success', 'Account created! Check your email for verification.');
+                navigation.navigate('ProfileSetup')
             }
         } catch (error) {
-            Alert.alert('Error', 'An unexpected error occurred during sign up.');
+            Alert.alert('Error');
         } finally {
             setLoading(false);
         }
     };
-
     const handleSignIn = async () => {
         setLoading(true);
         try {
@@ -163,7 +164,7 @@ const AuthScreen = () => {
                 Alert.alert('Login Canceled', 'Discord login was canceled.');
             }
         } catch (err) {
-            console.error("Discord sign-in error:", err);
+            // console.error("Discord sign-in error:", err);
             Alert.alert('Error', 'Something went wrong with Discord login. Please try again.');
         } finally {
             setOauthLoading(false);

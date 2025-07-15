@@ -57,7 +57,7 @@ const App = () => {
             .single();
 
         if (error) {
-            console.error('Failed to fetch user profile:', error);
+            // console.error('Failed to fetch user profile:', error);
             setProfileCompleted(false);
         } else {
             setProfileCompleted(data.profile_completed);
