@@ -14,7 +14,8 @@
     },
     "scheme": "com.fashionapp",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.bidhanmarasine.expofashionapp"
     },
     "android": {
       "adaptiveIcon": {
@@ -32,9 +33,7 @@
         "projectId": "215f4cec-02e9-4b1d-8d0e-4d2d730d6921"
       }
     },
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
+    "runtimeVersion": "1.0.0",
     "updates": {
       "url": "https://u.expo.dev/215f4cec-02e9-4b1d-8d0e-4d2d730d6921"
     },
